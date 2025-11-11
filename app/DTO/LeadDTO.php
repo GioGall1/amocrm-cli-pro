@@ -18,4 +18,14 @@ class LeadDTO
         $this->pipelineId = $data['pipeline_id'] ?? 0;
         $this->statusId = $data['status_id'] ?? 0;
     }
+    
+     public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'price' => $this->price,
+            'pipeline_id' => $this->pipelineId,
+            'status_id' => $this->statusId,
+        ];
+    }
 }

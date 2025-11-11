@@ -3,14 +3,14 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 $config = require __DIR__ . '/config/config.php';
 
-use App\Repositories\AmoCrmRepository;
+use App\Services\AmoCrmApiClient;
 use App\Services\LeadService;
 use App\Services\TokenService;
 
 $tokenService = new TokenService($config);
 $accessToken = $tokenService->getAccessToken();
 
-$repository = new AmoCrmRepository($config['sub_domain'], $accessToken);
+$repository = new AmoCrmApiClient($config['sub_domain'], $accessToken);
 $leadService = new LeadService($repository);
 
 echo "<pre>";

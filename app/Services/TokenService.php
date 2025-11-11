@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Helpers\Logger;
+use App\Services\LoggerService;
 use Exception;
 
 class TokenService
@@ -13,7 +13,7 @@ class TokenService
     private string $redirectUri;
     private string $code;
     private string $tokenFile;
-    private Logger $logger;
+    private LoggerService $logger;
 
     private ?string $accessToken = null;
     private ?string $refreshToken = null;
@@ -27,7 +27,7 @@ class TokenService
         $this->redirectUri = $config['redirect_uri'];
         $this->code = $config['code'];
         $this->tokenFile = $config['token_file'] ?? __DIR__ . '/../../logs/TOKEN.json';
-        $this->logger = new Logger();
+        $this->logger = new LoggerService();
 
         $this->loadToken();
     }

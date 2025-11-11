@@ -2,28 +2,31 @@
 
 namespace App\Services;
 
-use App\Repositories\AmoCrmRepository;
+use App\Services\AmoCrmApiClient;
 use App\DTO\LeadDTO;
-use App\Helpers\Logger;
+use App\Services\LoggerService;
 use Exception;
 
 class LeadService
 {
-    private AmoCrmRepository $repository;
-    private Logger $logger;
+    private AmoCrmApiClient $apiClient;
+    private LoggerService $logger;
 
-    public function __construct(AmoCrmRepository $repository)
+    public function __construct(AmoCrmApiClient $apiClient)
     {
-        $this->repository = $repository;
-        $this->logger = new Logger();
+        $this->apiClient = $apiClient;
+        $this->logger = new LoggerService();
     }
 
+    /**
+     * Получить сделки по указанному pipeline и статусу.
+     */
     public function getLeadsByStatus(int $pipelineId, int $statusId): array
     {
         try {
             echo "Запрос всех сделок через AmoCrmRepository...\n";
 
-            $response = $this->repository->get('leads', [
+            $response = $this->apiClient->get('leads', [
                 'limit' => 250,
                 'with'  => 'contacts'
             ]);
@@ -31,16 +34,7 @@ class LeadService
             $leadsData = $response['_embedded']['leads'] ?? [];
             echo "Всего получено сделок: " . count($leadsData) . "\n";
 
-            // ручная фильтрация
-            $filtered = array_filter($leadsData, fn($lead) =>
-                isset($lead['pipeline_id'], $lead['status_id'])
-                && $lead['pipeline_id'] == $pipelineId
-                && $lead['status_id'] == $statusId
-            );
-
-            echo "Отфильтровано сделок по статусу: " . count($filtered) . "\n";
-
-            return array_map(fn($lead) => new LeadDTO($lead), $filtered);
+            return $this->filterLeadsByPipelineAndStatus($leadsData, $pipelineId, $statusId);
         } catch (Exception $e) {
             $this->logger->error("Ошибка получения сделок: " . $e->getMessage());
             echo "Ошибка при запросе сделок: " . $e->getMessage() . "\n";
@@ -48,10 +42,26 @@ class LeadService
         }
     }
 
+    /**
+     * Отфильтровать и преобразовать сделки по pipeline и статусу.
+     */
+    private function filterLeadsByPipelineAndStatus(array $leadsData, int $pipelineId, int $statusId): array
+    {
+        $filtered = array_filter($leadsData, fn($lead) =>
+            isset($lead['pipeline_id'], $lead['status_id'])
+            && $lead['pipeline_id'] == $pipelineId
+            && $lead['status_id'] == $statusId
+        );
+
+        echo "Отфильтровано сделок по статусу: " . count($filtered) . "\n";
+
+        return array_map(fn($lead) => new LeadDTO($lead), $filtered);
+    }
+
     public function updateLeadStatus(int $leadId, int $pipelineId, int $newStatusId): bool
     {
         try {
-            $this->repository->send('leads', [
+            $this->apiClient->send('leads', [
                 [
                     'id' => $leadId,
                     'pipeline_id' => $pipelineId,
@@ -94,7 +104,7 @@ class LeadService
                     'status_id'   => $toStatusId,
                 ]);
 
-                $this->repository->send('leads', [$newLead->toArray()]);
+                $this->apiClient->send('leads', [$newLead->toArray()]);
                 echo "Создана копия сделки #{$lead->id}\n";
             }
         }

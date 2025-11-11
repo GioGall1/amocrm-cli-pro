@@ -1,21 +1,21 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Services;
 
-use App\Helpers\Logger;
+use App\Services\LoggerService;
 use Exception;
 
-class AmoCrmRepository
+class AmoCrmApiClient
 {
     private string $baseUrl;
     private string $accessToken;
-    private Logger $logger;
+    private LoggerService $logger;
 
     public function __construct(string $subDomain, string $accessToken)
     {
         $this->baseUrl = "https://{$subDomain}.amocrm.ru/api/v4/";
         $this->accessToken = $accessToken;
-        $this->logger = new Logger();
+        $this->logger = new LoggerService();
     }
 
     /**

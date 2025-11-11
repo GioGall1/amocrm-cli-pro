@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Helpers;
+namespace App\Services;
 
-class Logger
+class LoggerService
 {
     private string $logDir;
 
